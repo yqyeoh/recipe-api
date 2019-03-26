@@ -46,22 +46,37 @@ protectedRouter.route('/').post(
 //   }
 // });
 
-protectedRouter.route('/:id').put(
-  asyncMiddleware(async (req, res) => {
-    const { id } = req.params;
-    if (!id) {
-      throw boom.badRequest('missing ingredient id');
-    }
-    const updatedIngredient = await Ingredient.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!updatedIngredient) {
-      throw boom.notFound('Ingredient not found with id ' + id);
-    }
-    res.status(202).json(updatedIngredient);
-  })
-);
+protectedRouter
+  .route('/:id')
+  .put(
+    asyncMiddleware(async (req, res) => {
+      const { id } = req.params;
+      if (!id) {
+        throw boom.badRequest('missing ingredient id');
+      }
+      const updatedIngredient = await Ingredient.findByIdAndUpdate(id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+      if (!updatedIngredient) {
+        throw boom.notFound('Ingredient not found with id ' + id);
+      }
+      res.status(202).json(updatedIngredient);
+    })
+  )
+  .delete(
+    asyncMiddleware(async (req, res) => {
+      const { id } = req.params;
+      if (!id) {
+        throw boom.badRequest('missing ingredient id');
+      }
+      const deletedIngredient = await Ingredient.findByIdAndDelete(id, req.body);
+      if (!deletedIngredient) {
+        throw boom.notFound('Ingredient not found with id ' + id);
+      }
+      res.sendStatus(202);
+    })
+  );
 
 // protectedRouter.route('/:id').put(async (req, res) => {
 //   try {

@@ -34,7 +34,6 @@ describe('Ingredients', () => {
   });
 
   beforeEach(async () => {
-    console.log('beforeEach');
     await Ingredient.insertMany([
       { name: 'coconut', isExcludedFromMatch: false },
       { name: 'chicken', isExcludedFromMatch: false },
@@ -54,7 +53,6 @@ describe('Ingredients', () => {
 
   describe('[GET]', () => {
     test('returns all ingredients', async () => {
-      console.log(1);
       const expected = [
         { name: 'coconut', isExcludedFromMatch: false },
         { name: 'chicken', isExcludedFromMatch: false },
@@ -120,14 +118,12 @@ describe('Ingredients', () => {
     });
 
     test('should respond with 409 when creating ingredient that already exist', async () => {
-      console.log(2);
       const res = await request(app)
         .get(route())
         .expect('content-type', /json/)
         .expect(200);
 
       const ingredients = res.body;
-      console.log('ingredients before adding chicken', ingredients);
       const ingredient = new Ingredient({ name: 'chicken', isExcludedFromMatch: false });
       Ingredient.once('index', async error => {
         await request(app)
@@ -143,11 +139,25 @@ describe('Ingredients', () => {
         .send(ingredient)
         .expect(400);
     });
+    test('should respond with 400 when creating new ingredient with invalid value', async () => {
+      const newIngredient = new Ingredient({ name: '', isExcludedFromMatch: false });
+      await request(app)
+        .post(route())
+        .send(newIngredient)
+        .expect('content-type', /json/)
+        .expect(400);
+
+      const newIngredient2 = new Ingredient({ name: 'pepper', isExcludedFromMatch: 'booo' });
+      await request(app)
+        .post(route())
+        .send(newIngredient2)
+        .expect('content-type', /json/)
+        .expect(400);
+    });
   });
 
   describe('[PUT]', () => {
     test('should respond with 202 for a valid update', async () => {
-      console.log(3);
       const ingredient = await Ingredient.findOne({ name: 'coconut' });
       const res = await request(app)
         .put(route(ingredient._id))
@@ -156,6 +166,55 @@ describe('Ingredients', () => {
         .expect(202);
       expect(res.body.name).toBe('coconut');
       expect(res.body.isExcludedFromMatch).toBe(true);
+    });
+    test('should respond with 404 when updating of objectId that does not exist but of correct format', async () => {
+      await request(app)
+        .put(route('5c9a1dc854951c967995ee32'))
+        .send({ isExcludedFromMatch: true })
+        .expect('content-type', /json/)
+        .expect(404);
+    });
+    test('should respond with 400 when updating on invalid objectId', async () => {
+      await request(app)
+        .put(route('invalidId'))
+        .send({ isExcludedFromMatch: true })
+        .expect('content-type', /json/)
+        .expect(400);
+    });
+    test('should respond with 400 when updating with invalid values', async () => {
+      const ingredient = await Ingredient.findOne({ name: 'coconut' });
+      const res1 = await request(app)
+        .put(route(ingredient._id))
+        .send({ isExcludedFromMatch: 'booo' })
+        .expect('content-type', /json/)
+        .expect(400);
+      expect(JSON.parse(res1.error.text).message).toEqual(expect.stringMatching(/Cast to Boolean failed/i));
+
+      const res2 = await request(app)
+        .put(route(ingredient._id))
+        .send({ name: '' })
+        .expect('content-type', /json/)
+        .expect(400);
+      expect(JSON.parse(res2.error.text).message).toEqual(expect.stringMatching(/`name` is required/i));
+    });
+  });
+
+  describe('[DELETE]', () => {
+    test('should respond with 200 on delete of existing ingredient', async () => {
+      const ingredient = await Ingredient.findOne({ name: 'coconut' });
+      await request(app)
+        .delete(route(ingredient._id))
+        .expect(202);
+    });
+    test('should respond with 404 on delete of objectId that does not exist but of correct format', async () => {
+      await request(app)
+        .delete(route('5c9a1dc854951c967995ee35'))
+        .expect(404);
+    });
+    test('should respond with 400 when deleting invalid objectId', async () => {
+      await request(app)
+        .delete(route('invalidId'))
+        .expect(400);
     });
   });
 });
