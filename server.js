@@ -1,5 +1,6 @@
-const app = require('./app');
 const mongoose = require('mongoose');
+const app = require('./app');
+const seedRecipes = require('./tests/routes/seedRecipes');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -29,6 +30,7 @@ db.once('connected', () => {
     if (process.env.NODE_ENV === 'production') {
       return console.log(`server is running on heroku with port number ${port}`);
     }
+    seedRecipes();
     console.log(`server is running on port ${port}`);
   });
 });

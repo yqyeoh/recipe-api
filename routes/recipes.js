@@ -10,7 +10,7 @@ const asyncMiddleware = require('../asyncMiddleware');
 
 router.route('/').get(
   asyncMiddleware(async (req, res) => {
-    const recipes = await Recipe.find({})
+    const recipes = await Recipe.find()
       .populate('cuisine')
       .populate('ingredients.ingredient')
       .exec();
@@ -21,6 +21,7 @@ router.route('/').get(
 
 protectedRouter.route('/').post(
   asyncMiddleware(async (req, res) => {
+    console.log('hit');
     const { title, imageUrl, timeRequired, servings, ingredients, instructions } = req.body;
     const recipeFieldsWithoutRef = {
       title,
@@ -32,8 +33,11 @@ protectedRouter.route('/').post(
     const cuisine = await Cuisine.findOne({ name: req.body.cuisine });
     if (!cuisine) throw boom.badRequest('missing cuisine');
     const recipe = new Recipe({ ...recipeFieldsWithoutRef, cuisine: cuisine._id });
-    const savedRecipe = await recipe.save();
-    console.log(savedRecipe);
+    await recipe.save();
+    const recipes = await Recipe.find()
+      .populate('cuisine')
+      .exec();
+    res.status(201).json(recipes);
   })
 );
 

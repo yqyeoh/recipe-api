@@ -35,6 +35,8 @@ describe('Recipes', () => {
 
   afterEach(async () => {
     await Recipe.collection.deleteMany({});
+    await Cuisine.collection.deleteMany({});
+    await Ingredient.collection.deleteMany({});
     // await db.dropCollection('ingredients');
   });
 
@@ -45,16 +47,37 @@ describe('Recipes', () => {
 
   describe('[GET]', () => {
     test('get all recipes', async () => {
-      const res = await request(app)
-        .get(route())
-        .expect('content-type', /json/)
-        .expect(200);
-      expect(res.body).toHaveLength(2);
+      console.log(await Cuisine.find());
+      // console.log(await Ingredient.find());
+      console.log(await Recipe.find());
+
+      // const res = await request(app)
+      //   .get(route())
+      //   .expect('content-type', /json/)
+      //   .expect(200);
+      // expect(res.body).toHaveLength(2);
     });
   });
   describe('[POST]', () => {
-    xtest('respond with 201 when creating valid new ingredient', async () => {
-      const cuisine = await Cuisine.findOne({ name: 'Thai' });
+    test('respond with 201 when creating valid new ingredient', async () => {
+      const recipe = {
+        title: 'Chicken Parmesan',
+        cuisine: 'Chinese',
+        imageUrl: 'https://foolproofliving.com/wp-content/uploads/2013/09/Lighter-Chicken-Parmesan-9688-FL.jpg',
+        timeRequired: '90',
+        servings: '5',
+        instructions: 'test3',
+        ingredients: [
+          { name: 'çhicken', extraDescription: 'seasoned', qty: '30', unit: '', isOptional: false },
+          { name: 'beef', extraDescription: 'jerky', qty: '2', unit: 'slice', isOptional: true },
+          { name: 'coriander', extraDescription: 'abit', qty: '', unit: 'stalk', isOptional: true },
+        ],
+      };
+      await request(app)
+        .post(route())
+        .send(recipe)
+        .expect('content-type', /json/)
+        .expect(201);
     });
   });
 });

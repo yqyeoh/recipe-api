@@ -3,19 +3,20 @@ const Cuisine = require('../../models/cuisine');
 const Recipe = require('../../models/recipe');
 
 const seedRecipes = async () => {
-  // await Ingredient.insertMany([
-  //   { name: 'coconut', isExcludedFromMatch: false },
-  //   { name: 'chicken', isExcludedFromMatch: false },
-  //   { name: 'chicken breast', isExcludedFromMatch: false },
-  //   { name: 'salt', isExcludedFromMatch: true },
-  // ]);
-  // await Cuisine.insertMany([{ name: 'Korean' }, { name: 'Western' }, { name: 'Thai' }, { name: 'Italian' }]);
-  const chinese = new Cuisine({ name: 'Chinese' });
-  await chinese.save();
-  const chicken = new Ingredient({ name: 'chicken', isExcludedFromMatch: false });
-  await chicken.save();
-  const pepper = new Ingredient({ name: 'pepper', isExcludedFromMatch: false });
-  await pepper.save();
+  await Ingredient.insertMany([
+    { name: 'beef', isExcludedFromMatch: false },
+    { name: 'pepper', isExcludedFromMatch: false },
+    { name: 'chicken', isExcludedFromMatch: false },
+    { name: 'salt', isExcludedFromMatch: true },
+  ]);
+  await Cuisine.insertMany([{ name: 'Korean' }, { name: 'Chinese' }, { name: 'Thai' }, { name: 'Italian' }]);
+  const beef = Ingredient.findOne({ name: 'beef' });
+  const pepper = Ingredient.findOne({ name: 'pepper' });
+  const chicken = Ingredient.findOne({ name: 'chicken' });
+  const salt = Ingredient.findOne({ name: 'salt' });
+  const chinese = Cuisine.findOne({ name: 'Chinese' });
+  const western = Cuisine.findOne({ name: 'Western' });
+
   const recipe1 = new Recipe({
     title: 'Chicken Parmesan',
     cuisine: chinese._id,
@@ -41,12 +42,7 @@ const seedRecipes = async () => {
     instructions: `test instructions`,
   });
   await recipe1.save();
-  const western = new Cuisine({ name: 'Western' });
-  await western.save();
-  const beef = new Ingredient({ name: 'beef', isExcludedFromMatch: false });
-  await beef.save();
-  const salt = new Ingredient({ name: 'salt', isExcludedFromMatch: false });
-  await salt.save();
+
   const recipe2 = new Recipe({
     title: 'Beef Noodle',
     cuisine: western._id,
