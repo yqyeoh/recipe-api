@@ -13,9 +13,5 @@ const ingredientSchema = new mongoose.Schema({
   },
 });
 
-ingredientSchema.pre('save', async () => {
-  await Ingredient.init();
-});
-
 const Ingredient = mongoose.model('Ingredient', ingredientSchema);
 module.exports = Ingredient;

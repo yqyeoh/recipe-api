@@ -1,8 +1,9 @@
 const express = require('express');
+
 const router = express.Router();
 const protectedRouter = express.Router();
-const Ingredient = require('../models/ingredient');
 const boom = require('boom');
+const Ingredient = require('../models/ingredient');
 const asyncMiddleware = require('../asyncMiddleware');
 
 // router.route('/').get(async (req, res) => {
@@ -31,7 +32,6 @@ protectedRouter.route('/').post(
   asyncMiddleware(async (req, res) => {
     const ingredient = new Ingredient(req.body);
     const savedIngredient = await ingredient.save();
-    console.log('saved ingredient', savedIngredient);
     res.status(201).json(savedIngredient);
   })
 );
@@ -51,15 +51,15 @@ protectedRouter
   .put(
     asyncMiddleware(async (req, res) => {
       const { id } = req.params;
-      if (!id) {
-        throw boom.badRequest('missing ingredient id');
-      }
+      // if (!id) {
+      //   throw boom.badRequest('missing ingredient id');
+      // }
       const updatedIngredient = await Ingredient.findByIdAndUpdate(id, req.body, {
         new: true,
         runValidators: true,
       });
       if (!updatedIngredient) {
-        throw boom.notFound('Ingredient not found with id ' + id);
+        throw boom.notFound(`Ingredient not found with id ${id}`);
       }
       res.status(202).json(updatedIngredient);
     })
@@ -72,7 +72,7 @@ protectedRouter
       }
       const deletedIngredient = await Ingredient.findByIdAndDelete(id, req.body);
       if (!deletedIngredient) {
-        throw boom.notFound('Ingredient not found with id ' + id);
+        throw boom.notFound(`Ingredient not found with id ${id}`);
       }
       res.sendStatus(202);
     })

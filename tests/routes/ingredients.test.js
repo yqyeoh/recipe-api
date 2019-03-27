@@ -43,7 +43,8 @@ describe('Ingredients', () => {
   });
 
   afterEach(async () => {
-    await db.dropCollection('ingredients');
+    await Ingredient.collection.deleteMany({});
+    // await db.dropCollection('ingredients');
   });
 
   afterAll(async () => {
@@ -106,7 +107,7 @@ describe('Ingredients', () => {
 
   describe('[POST]', () => {
     test('should respond with 201 when creating new ingredient', async () => {
-      const newIngredient = new Ingredient({ name: 'beef', isExcludedFromMatch: false });
+      const newIngredient = { name: 'beef', isExcludedFromMatch: false };
       const res = await request(app)
         .post(route())
         .send(newIngredient)
@@ -117,37 +118,30 @@ describe('Ingredients', () => {
       expect(ingredient.isExcludedFromMatch).toEqual(false);
     });
 
-    test('should respond with 409 when creating ingredient that already exist', async () => {
+    test('should respond with 400 when creating ingredient that already exist', async () => {
+      const ingredient = { name: 'chicken', isExcludedFromMatch: false };
       const res = await request(app)
-        .get(route())
-        .expect('content-type', /json/)
-        .expect(200);
-
-      const ingredients = res.body;
-      const ingredient = new Ingredient({ name: 'chicken', isExcludedFromMatch: false });
-      Ingredient.once('index', async error => {
-        await request(app)
-          .post(route())
-          .send(ingredient)
-          .expect(409);
-      });
+        .post(route())
+        .send(ingredient)
+        .expect(409);
+      expect(JSON.parse(res.error.text).message).toEqual(expect.stringMatching(/duplicate key error/i));
     });
     test('should respond with 400 when creating ingredient with missing required property', async () => {
-      const ingredient = new Ingredient({ name: 'lamb' });
+      const ingredient = { name: 'lamb' };
       await request(app)
         .post(route())
         .send(ingredient)
         .expect(400);
     });
     test('should respond with 400 when creating new ingredient with invalid value', async () => {
-      const newIngredient = new Ingredient({ name: '', isExcludedFromMatch: false });
+      const newIngredient = { name: '', isExcludedFromMatch: false };
       await request(app)
         .post(route())
         .send(newIngredient)
         .expect('content-type', /json/)
         .expect(400);
 
-      const newIngredient2 = new Ingredient({ name: 'pepper', isExcludedFromMatch: 'booo' });
+      const newIngredient2 = { name: 'pepper', isExcludedFromMatch: 'booo' };
       await request(app)
         .post(route())
         .send(newIngredient2)
@@ -161,10 +155,11 @@ describe('Ingredients', () => {
       const ingredient = await Ingredient.findOne({ name: 'coconut' });
       const res = await request(app)
         .put(route(ingredient._id))
+        .send({ name: 'prawn' })
         .send({ isExcludedFromMatch: true })
         .expect('content-type', /json/)
         .expect(202);
-      expect(res.body.name).toBe('coconut');
+      expect(res.body.name).toBe('prawn');
       expect(res.body.isExcludedFromMatch).toBe(true);
     });
     test('should respond with 404 when updating of objectId that does not exist but of correct format', async () => {
