@@ -18,7 +18,7 @@ app.use('/ingredients', ingredients.protectedRouter);
 app.use('/cuisines', cuisines.router);
 app.use('/cuisines', cuisines.protectedRouter);
 app.use((err, req, res, next) => {
-  //   console.log(err.message);
+  console.log(err.message);
   //   console.log(err.output.payload);
   return res.status(err.output.statusCode).json(err.output.payload);
 });
