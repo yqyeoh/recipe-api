@@ -30,35 +30,22 @@ protectedRouter.route('/').post(
     };
     const cuisine = await Cuisine.findOne({ name: req.body.cuisine });
     if (!cuisine) throw boom.badRequest('missing cuisine');
-    const mappedIngredients = ingredients.map(async item => {
-      const ingredientDetails = item;
-      let foundIngredient = await Ingredient.findOne({ name: ingredientDetails.ingredient });
+    const mappedIngredientsPromises = ingredients.map(async item => {
+      let foundIngredient = await Ingredient.findOne({ name: item.ingredient });
       if (!foundIngredient) {
-        const newIngredient = new Ingredient({ name: ingredientDetails.ingredient, isExcludedFromMatch: false });
+        const newIngredient = new Ingredient({ name: item.ingredient, isExcludedFromMatch: false });
         foundIngredient = await newIngredient.save();
       }
-      ingredientDetails.ingredient = foundIngredient._id;
-      console.log('ingredient details', ingredientDetails);
-      return ingredientDetails;
+      item.ingredient = foundIngredient._id;
+      return item;
     });
-    // console.log('mappedingredient', mappedIngredients);
-    const recipe = new Recipe({ ...recipeFieldsWithoutRef, cuisine: cuisine._id, ingredients: mappedIngredients });
-    // console.log('recipe ingredients', recipe.ingredients[0]);
+    const mappedIngredientData = await Promise.all(mappedIngredientsPromises);
+    const recipe = new Recipe({ ...recipeFieldsWithoutRef, cuisine: cuisine._id, ingredients: mappedIngredientData });
     const savedRecipe = await recipe.save();
-    const populatedRecipe = await Recipe.findOne({ _id: savedRecipe._id })
+    const populatedRecipe = await Recipe.findOne(savedRecipe)
       .populate('cuisine')
       .populate('ingredients.ingredient');
     res.status(201).json(populatedRecipe);
-    // console.log('savedRecipe', savedRecipe.ingredients[0]);
-    // recipe.save(err => {
-    //   Recipe.populate(recipe, { path: 'cuisine' }, (err, recipe1) => {
-    //     console.log(recipe1);
-    //     res.status(201).json(recipe1);
-    //   });
-    // });
-
-    // const populatedRecipe = await savedRecipe.populate('cuisine').populate('ingredients.ingredient.name');
-    // console.log(populatedRecipe);
   })
 );
 

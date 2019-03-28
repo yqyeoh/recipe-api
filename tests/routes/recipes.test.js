@@ -45,7 +45,7 @@ describe('Recipes', () => {
     await mongod.stop();
   });
 
-  xdescribe('[GET]', () => {
+  describe('[GET]', () => {
     test('get all recipes', async () => {
       const res = await request(app)
         .get(route())
@@ -74,7 +74,6 @@ describe('Recipes', () => {
         .send(recipe)
         .expect('content-type', /json/)
         .expect(201);
-      console.log(res.body);
     });
   });
 });
