@@ -45,17 +45,13 @@ describe('Recipes', () => {
     await mongod.stop();
   });
 
-  describe('[GET]', () => {
+  xdescribe('[GET]', () => {
     test('get all recipes', async () => {
-      console.log(await Cuisine.find());
-      // console.log(await Ingredient.find());
-      console.log(await Recipe.find());
-
-      // const res = await request(app)
-      //   .get(route())
-      //   .expect('content-type', /json/)
-      //   .expect(200);
-      // expect(res.body).toHaveLength(2);
+      const res = await request(app)
+        .get(route())
+        .expect('content-type', /json/)
+        .expect(200);
+      expect(res.body).toHaveLength(2);
     });
   });
   describe('[POST]', () => {
@@ -68,16 +64,17 @@ describe('Recipes', () => {
         servings: '5',
         instructions: 'test3',
         ingredients: [
-          { name: 'çhicken', extraDescription: 'seasoned', qty: '30', unit: '', isOptional: false },
-          { name: 'beef', extraDescription: 'jerky', qty: '2', unit: 'slice', isOptional: true },
-          { name: 'coriander', extraDescription: 'abit', qty: '', unit: 'stalk', isOptional: true },
+          { ingredient: 'chicken', extraDescription: 'seasoned', qty: '30', unit: '', isOptional: false },
+          { ingredient: 'beef', extraDescription: 'jerky', qty: '2', unit: 'slice', isOptional: true },
+          { ingredient: 'coriander', extraDescription: 'abit', qty: '', unit: 'stalk', isOptional: true },
         ],
       };
-      await request(app)
+      const res = await request(app)
         .post(route())
         .send(recipe)
         .expect('content-type', /json/)
         .expect(201);
+      console.log(res.body);
     });
   });
 });

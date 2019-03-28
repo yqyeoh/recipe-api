@@ -12,8 +12,7 @@ router.route('/').get(
   asyncMiddleware(async (req, res) => {
     const recipes = await Recipe.find()
       .populate('cuisine')
-      .populate('ingredients.ingredient')
-      .exec();
+      .populate('ingredients.ingredient');
 
     res.status(200).json(recipes);
   })
@@ -21,7 +20,6 @@ router.route('/').get(
 
 protectedRouter.route('/').post(
   asyncMiddleware(async (req, res) => {
-    console.log('hit');
     const { title, imageUrl, timeRequired, servings, ingredients, instructions } = req.body;
     const recipeFieldsWithoutRef = {
       title,
@@ -32,12 +30,35 @@ protectedRouter.route('/').post(
     };
     const cuisine = await Cuisine.findOne({ name: req.body.cuisine });
     if (!cuisine) throw boom.badRequest('missing cuisine');
-    const recipe = new Recipe({ ...recipeFieldsWithoutRef, cuisine: cuisine._id });
-    await recipe.save();
-    const recipes = await Recipe.find()
+    const mappedIngredients = ingredients.map(async item => {
+      const ingredientDetails = item;
+      let foundIngredient = await Ingredient.findOne({ name: ingredientDetails.ingredient });
+      if (!foundIngredient) {
+        const newIngredient = new Ingredient({ name: ingredientDetails.ingredient, isExcludedFromMatch: false });
+        foundIngredient = await newIngredient.save();
+      }
+      ingredientDetails.ingredient = foundIngredient._id;
+      console.log('ingredient details', ingredientDetails);
+      return ingredientDetails;
+    });
+    // console.log('mappedingredient', mappedIngredients);
+    const recipe = new Recipe({ ...recipeFieldsWithoutRef, cuisine: cuisine._id, ingredients: mappedIngredients });
+    // console.log('recipe ingredients', recipe.ingredients[0]);
+    const savedRecipe = await recipe.save();
+    const populatedRecipe = await Recipe.findOne({ _id: savedRecipe._id })
       .populate('cuisine')
-      .exec();
-    res.status(201).json(recipes);
+      .populate('ingredients.ingredient');
+    res.status(201).json(populatedRecipe);
+    // console.log('savedRecipe', savedRecipe.ingredients[0]);
+    // recipe.save(err => {
+    //   Recipe.populate(recipe, { path: 'cuisine' }, (err, recipe1) => {
+    //     console.log(recipe1);
+    //     res.status(201).json(recipe1);
+    //   });
+    // });
+
+    // const populatedRecipe = await savedRecipe.populate('cuisine').populate('ingredients.ingredient.name');
+    // console.log(populatedRecipe);
   })
 );
 

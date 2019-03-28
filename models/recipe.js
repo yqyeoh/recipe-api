@@ -10,6 +10,7 @@ const recipeSchema = new mongoose.Schema(
     cuisine: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Cuisine',
+      required: true
     },
     imageUrl: {
       type: String,
@@ -47,7 +48,7 @@ const recipeSchema = new mongoose.Schema(
         },
         isOptional: {
           type: Boolean,
-          required: true,
+          // required: true,
         },
       },
     ],

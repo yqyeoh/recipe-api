@@ -9,13 +9,13 @@ const seedRecipes = async () => {
     { name: 'chicken', isExcludedFromMatch: false },
     { name: 'salt', isExcludedFromMatch: true },
   ]);
-  await Cuisine.insertMany([{ name: 'Korean' }, { name: 'Chinese' }, { name: 'Thai' }, { name: 'Italian' }]);
-  const beef = Ingredient.findOne({ name: 'beef' });
-  const pepper = Ingredient.findOne({ name: 'pepper' });
-  const chicken = Ingredient.findOne({ name: 'chicken' });
-  const salt = Ingredient.findOne({ name: 'salt' });
-  const chinese = Cuisine.findOne({ name: 'Chinese' });
-  const western = Cuisine.findOne({ name: 'Western' });
+  await Cuisine.insertMany([{ name: 'Korean' }, { name: 'Chinese' }, { name: 'Western' }, { name: 'Italian' }]);
+  const beef = await Ingredient.findOne({ name: 'beef' });
+  const pepper = await Ingredient.findOne({ name: 'pepper' });
+  const chicken = await Ingredient.findOne({ name: 'chicken' });
+  const salt = await Ingredient.findOne({ name: 'salt' });
+  const chinese = await Cuisine.findOne({ name: 'Chinese' });
+  const western = await Cuisine.findOne({ name: 'Western' });
 
   const recipe1 = new Recipe({
     title: 'Chicken Parmesan',

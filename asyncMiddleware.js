@@ -3,6 +3,7 @@ const boom = require('boom');
 const asyncMiddleware = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(err => {
     if (!err.isBoom) {
+      console.log(err);
       if (err.name === 'MongoError' && err.code === 11000) {
         return next(boom.boomify(err, { statusCode: 409 }));
       }

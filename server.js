@@ -30,7 +30,7 @@ db.once('connected', () => {
     if (process.env.NODE_ENV === 'production') {
       return console.log(`server is running on heroku with port number ${port}`);
     }
-    seedRecipes();
+    // seedRecipes();
     console.log(`server is running on port ${port}`);
   });
 });
