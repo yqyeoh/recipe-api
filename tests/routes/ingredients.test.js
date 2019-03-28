@@ -11,13 +11,6 @@ const route = (params = '') => {
   return `${path}/${params}`;
 };
 
-const mapResponseIngredients = ingredients => {
-  return ingredients.map(ingredient => ({
-    name: ingredient.name,
-    isExcludedFromMatch: ingredient.isExcludedFromMatch,
-  }));
-};
-
 describe('Ingredients', () => {
   let mongod;
   let db;
@@ -54,12 +47,6 @@ describe('Ingredients', () => {
 
   describe('[GET]', () => {
     test('returns all ingredients', async () => {
-      const expected = [
-        { name: 'coconut', isExcludedFromMatch: false },
-        { name: 'chicken', isExcludedFromMatch: false },
-        { name: 'chicken breast', isExcludedFromMatch: false },
-        { name: 'salt', isExcludedFromMatch: true },
-      ];
       const res = await request(app)
         .get(route())
         .expect('content-type', /json/)
@@ -67,14 +54,14 @@ describe('Ingredients', () => {
 
       const ingredients = res.body;
       expect(ingredients).toHaveLength(4);
-      const result = mapResponseIngredients(ingredients);
-      expect(result).toEqual(expect.arrayContaining(expected));
-    });
-    test('get ingredients by valid query', async () => {
-      const expected = [
+      expect(ingredients).toContainObject(
+        { name: 'coconut', isExcludedFromMatch: false },
         { name: 'chicken', isExcludedFromMatch: false },
         { name: 'chicken breast', isExcludedFromMatch: false },
-      ];
+        { name: 'salt', isExcludedFromMatch: true }
+      );
+    });
+    test('get ingredients by valid query', async () => {
       const res = await request(app)
         .get(route())
         .query({ name: 'chicken' })
@@ -83,19 +70,19 @@ describe('Ingredients', () => {
 
       const ingredients = res.body;
       expect(ingredients).toHaveLength(2);
-      const result = mapResponseIngredients(ingredients);
-      expect(result).toEqual(expect.arrayContaining(expected));
+      expect(ingredients).toContainObject(
+        { name: 'chicken', isExcludedFromMatch: false },
+        { name: 'chicken breast', isExcludedFromMatch: false }
+      );
     });
     test('return empty array when invalid ingredient name is queried', async () => {
-      const expected = [];
       const res = await request(app)
         .get(route())
         .query({ name: 'oil' })
         .expect('content-type', /json/)
         .expect(200);
 
-      const ingredients = res.body;
-      expect(ingredients).toHaveLength(0);
+      expect(res.body).toHaveLength(0);
     });
     test('return with 400 bad request when getting ingredients by invalid query key', async () => {
       await request(app)

@@ -57,6 +57,33 @@ describe('Cuisines', () => {
       expect(cuisines).toHaveLength(4);
       expect(cuisines).toEqual(expect.arrayContaining(expected));
     });
+    test('get cuisines by valid query', async () => {
+      const expected = [{ name: 'Chinese' }, { name: 'Western' }];
+      const res = await request(app)
+        .get(route())
+        .query({ name: 'e' })
+        .expect('content-type', /json/)
+        .expect(200);
+
+      const cuisines = res.body;
+      expect(cuisines).toHaveLength(2);
+      expect(cuisines).toContainObject({ name: 'Chinese' }, { name: 'Western' });
+    });
+    test('return empty array when invalid cuisine name is queried', async () => {
+      const res = await request(app)
+        .get(route())
+        .query({ name: 'asfdf' })
+        .expect('content-type', /json/)
+        .expect(200);
+
+      expect(res.body).toHaveLength(0);
+    });
+    test('return with 400 bad request when getting cuisines by invalid query key', async () => {
+      await request(app)
+        .get(route())
+        .query({ type: 'hawker' })
+        .expect(400);
+    });
   });
   describe('[POST]', () => {
     test('should respond with 201 when creating a new cuisine', async () => {

@@ -35,14 +35,12 @@ const saveRecipe = async (route, req) => {
   if (route === 'post') {
     const recipe = new Recipe({ ...recipeFieldsWithoutRef, cuisine: cuisine._id, ingredients: mappedIngredientData });
     savedRecipe = await recipe.save();
-    console.log('savedRecipe', savedRecipe);
   } else {
     const updatedRecipe = { ...recipeFieldsWithoutRef, cuisine: cuisine._id, ingredients: mappedIngredientData };
     savedRecipe = await Recipe.findByIdAndUpdate(req.params.id, updatedRecipe, {
       new: true,
       runValidators: true,
     });
-    console.log('saved recipe', savedRecipe);
     if (!savedRecipe) {
       throw boom.notFound(`Recipe not found with id ${req.params.id}`);
     }
@@ -50,7 +48,6 @@ const saveRecipe = async (route, req) => {
   const populatedRecipe = await Recipe.findOne(savedRecipe)
     .populate('cuisine')
     .populate('ingredients.ingredient');
-  console.log('populated recipe', populatedRecipe);
   return populatedRecipe;
 };
 
@@ -68,10 +65,6 @@ router.route('/').get(
     } else {
       recipes = await Recipe.find().or(filterExpressions);
     }
-    // const recipes = await Recipe.find()
-    //   .populate('cuisine')
-    //   .populate('ingredients.ingredient');
-
     res.status(200).json(recipes);
   })
 );
@@ -79,7 +72,6 @@ router.route('/').get(
 protectedRouter.route('/').post(
   asyncMiddleware(async (req, res) => {
     const populatedRecipe = await saveRecipe('post', req);
-    console.log('populatedRecipe', populatedRecipe);
     res.status(201).json(populatedRecipe);
   })
 );

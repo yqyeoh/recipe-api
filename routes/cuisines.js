@@ -10,7 +10,15 @@ const Cuisine = require('../models/cuisine');
 
 router.route('/').get(
   asyncMiddleware(async (req, res) => {
-    res.status(200).json(await Cuisine.find());
+    const { name } = req.query;
+    let cuisines;
+    if (!name && Object.keys(req.query).length > 0) throw boom.badRequest('invalid query');
+    if (name) {
+      cuisines = await Cuisine.find({ name: new RegExp(name, 'i') });
+    } else {
+      cuisines = await Cuisine.find();
+    }
+    res.status(200).json(cuisines);
   })
 );
 
