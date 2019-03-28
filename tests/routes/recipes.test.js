@@ -7,7 +7,7 @@ const app = require('../../app');
 const Ingredient = require('../../models/ingredient');
 const Cuisine = require('../../models/cuisine');
 const Recipe = require('../../models/recipe');
-const seedRecipes = require('./seedRecipes');
+const { seedRecipes, seedData } = require('./seedRecipes');
 
 const route = (params = '') => {
   const path = '/recipes';
@@ -51,7 +51,37 @@ describe('Recipes', () => {
         .get(route())
         .expect('content-type', /json/)
         .expect(200);
-      expect(res.body).toHaveLength(2);
+      const recipes = res.body;
+      expect(recipes).toHaveLength(3);
+      // expect(recipes).toEqual(
+      //   expect.arrayContaining(
+      //     seedData.map(recipe => {
+      //       const { title, imageUrl, timeRequired, servings, instructions } = recipe;
+      //       return expect.objectContaining({
+      //         title,
+      //         imageUrl,
+      //         timeRequired,
+      //         servings,
+      //         instructions,
+      //         cuisine: expect.objectContaining({ name: recipe.cuisine }),
+      //         ingredients: expect.arrayContaining(
+      //           recipe.ingredients.map(item => {
+      //             const { extraDescription, qty, unit, isOptional } = item;
+      //             return expect.objectContaining({
+      //               ingredient: expect.objectContaining({
+      //                 name: item.ingredient,
+      //               }),
+      //               extraDescription,
+      //               qty,
+      //               unit,
+      //               isOptional,
+      //             });
+      //           })
+      //         ),
+      //       });
+      //     })
+      //   )
+      // );
       expect(res.body).toContainObject({
         title: 'Chicken Parmesan',
         timeRequired: 90,
@@ -112,6 +142,14 @@ describe('Recipes', () => {
           }),
         ]),
       });
+    });
+    test('test get recipes by title', async () => {
+      const res = await request(app)
+        .get(route())
+        .query({ title: 'chick' })
+        .expect('content-type', /json/)
+        .expect(200);
+      expect(res.body).toHaveLength(2);
     });
   });
   describe('[POST]', () => {
@@ -190,32 +228,33 @@ describe('Recipes', () => {
     });
   });
   describe('[PUT]', () => {
+    const updatedRecipe = {
+      title: 'Chicken Parmesan2',
+      cuisine: 'Korean',
+      imageUrl: 'https://foolproofliving.com/wp-content/uploads/2013/09/Lighter-Chicken-Parmesan-9688-FL.jpg',
+      timeRequired: 30,
+      servings: '2',
+      ingredients: [
+        {
+          ingredient: 'cheese',
+          extraDescription: 'cheddar',
+          qty: '1',
+          unit: 'block',
+          isOptional: false,
+        },
+        {
+          ingredient: 'pepper',
+          extraDescription: 'for seasoning',
+          qty: '1/4',
+          unit: 'tsp',
+          isOptional: false,
+        },
+      ],
+      instructions: `updated test instructions`,
+    };
     test('respond with 202 when doing a valid update on an existing recipe', async () => {
       const recipe = await Recipe.findOne({ title: 'Chicken Parmesan' });
-      const updatedRecipe = {
-        title: 'Chicken Parmesan2',
-        cuisine: 'Korean',
-        imageUrl: 'https://foolproofliving.com/wp-content/uploads/2013/09/Lighter-Chicken-Parmesan-9688-FL.jpg',
-        timeRequired: 30,
-        servings: '2',
-        ingredients: [
-          {
-            ingredient: 'cheese',
-            extraDescription: 'cheddar',
-            qty: '1',
-            unit: 'block',
-            isOptional: false,
-          },
-          {
-            ingredient: 'pepper',
-            extraDescription: 'for seasoning',
-            qty: '1/4',
-            unit: 'tsp',
-            isOptional: false,
-          },
-        ],
-        instructions: `updated test instructions`,
-      };
+
       const { title, imageUrl, timeRequired, servings, instructions } = updatedRecipe;
       const res = await request(app)
         .put(route(recipe._id))
@@ -247,6 +286,64 @@ describe('Recipes', () => {
           ),
         })
       );
+    });
+    test('should respond with 404 when updating of objectId that does not exist but of correct format', async () => {
+      const res = await request(app)
+        .put(route('5c9c87eec7b99571d48cc6c3'))
+        .send(updatedRecipe)
+        .expect('content-type', /json/)
+        .expect(404);
+
+      expect(res.body.message).toEqual(expect.stringMatching(/Recipe not found/i));
+    });
+    test('should respond with 400 when updating on invalid objectId', async () => {
+      const res = await request(app)
+        .put(route('invalidId'))
+        .send(updatedRecipe)
+        .expect('content-type', /json/)
+        .expect(400);
+
+      expect(res.body.message).toEqual(expect.stringMatching(/Cast to ObjectId failed/i));
+    });
+    test('should respond with 400 when updating with invalid values', async () => {
+      const recipe = await Recipe.findOne({ title: 'Chicken Parmesan' });
+      const copyUpdatedRecipe = { ...updatedRecipe };
+      copyUpdatedRecipe.title = '';
+      const res1 = await request(app)
+        .put(route(recipe._id))
+        .send(copyUpdatedRecipe)
+        .expect('content-type', /json/)
+        .expect(400);
+      expect(res1.body.message).toEqual(expect.stringMatching(/missing title/i));
+
+      const copyUpdatedRecipe2 = { ...updatedRecipe };
+      copyUpdatedRecipe2.cuisine = '';
+      const res2 = await request(app)
+        .put(route(recipe._id))
+        .send(copyUpdatedRecipe2)
+        .expect('content-type', /json/)
+        .expect(400);
+      expect(res2.body.message).toEqual(expect.stringMatching(/missing cuisine/i));
+    });
+  });
+  describe('[DELETE]', () => {
+    test('should respond with 200 on delete of existing recipe', async () => {
+      const recipe = await Recipe.findOne({ title: 'Chicken Parmesan' });
+      await request(app)
+        .delete(route(recipe._id))
+        .expect(202);
+    });
+    test('should respond with 404 on delete of objectId that does not exist but of correct format', async () => {
+      const res = await request(app)
+        .delete(route('5c9a1dc854951c967995ee35'))
+        .expect(404);
+      expect(res.body.message).toEqual(expect.stringMatching(/Recipe not found/i));
+    });
+    test('should respond with 400 when deleting invalid objectId', async () => {
+      const res = await request(app)
+        .delete(route('invalidId'))
+        .expect(400);
+      expect(res.body.message).toEqual(expect.stringMatching(/Cast to ObjectId failed/i));
     });
   });
 });
