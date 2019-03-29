@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const app = require('./app');
-const seedRecipes = require('./tests/routes/seedRecipes');
+const seedDevelopmentData = require('./seed/development/seedData');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -23,14 +23,17 @@ db.on('error', error => {
 
 db.on('connected', error => {
   console.log('Successfully connected to the database');
+  db.dropDatabase(() => {
+    console.log('database dropped');
+  });
 });
 
 db.once('connected', () => {
-  app.listen(port, () => {
+  app.listen(port, async () => {
     if (process.env.NODE_ENV === 'production') {
       return console.log(`server is running on heroku with port number ${port}`);
     }
-    // seedRecipes();
+    await seedDevelopmentData();
     console.log(`server is running on port ${port}`);
   });
 });

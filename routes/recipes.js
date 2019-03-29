@@ -98,4 +98,4 @@ protectedRouter
     })
   );
 
-module.exports = { router, protectedRouter };
+module.exports = { router, protectedRouter, saveRecipe };
