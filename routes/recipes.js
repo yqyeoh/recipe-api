@@ -9,6 +9,7 @@ const Ingredient = require('../models/ingredient');
 const asyncMiddleware = require('../asyncMiddleware');
 
 const saveRecipe = async (route, req) => {
+  console.log('save recipe hit');
   const { title, imageUrl, timeRequired, servings, ingredients, instructions } = req.body;
   const recipeFieldsWithoutRef = {
     title,
@@ -17,6 +18,7 @@ const saveRecipe = async (route, req) => {
     servings,
     instructions,
   };
+  console.log('ingredients', ingredients);
   const cuisine = await Cuisine.findOne({ name: req.body.cuisine });
   if (!cuisine) throw boom.badRequest('missing cuisine');
   if (!title) throw boom.badRequest('missing title');

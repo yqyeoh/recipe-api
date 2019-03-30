@@ -23,9 +23,6 @@ db.on('error', error => {
 
 db.on('connected', error => {
   console.log('Successfully connected to the database');
-  db.dropDatabase(() => {
-    console.log('database dropped');
-  });
 });
 
 db.once('connected', () => {
@@ -33,6 +30,9 @@ db.once('connected', () => {
     if (process.env.NODE_ENV === 'production') {
       return console.log(`server is running on heroku with port number ${port}`);
     }
+    await db.dropDatabase(() => {
+      console.log('database dropped');
+    });
     await seedDevelopmentData();
     console.log(`server is running on port ${port}`);
   });

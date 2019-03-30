@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 
 const app = express();
 const index = require('./routes/index');
@@ -6,6 +7,7 @@ const recipes = require('./routes/recipes');
 const ingredients = require('./routes/ingredients');
 const cuisines = require('./routes/cuisines');
 
+app.use(cors());
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
