@@ -27,13 +27,13 @@ db.on('connected', error => {
 
 db.once('connected', () => {
   app.listen(port, async () => {
-    if (process.env.NODE_ENV === 'production') {
-      return console.log(`server is running on heroku with port number ${port}`);
-    }
     await db.dropDatabase(() => {
       console.log('database dropped');
     });
     await seedDevelopmentData();
     console.log(`server is running on port ${port}`);
+    if (process.env.NODE_ENV === 'production') {
+      return console.log(`server is running on heroku with port number ${port}`);
+    }
   });
 });
