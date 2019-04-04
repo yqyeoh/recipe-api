@@ -4,7 +4,7 @@ const boom = require('boom');
 
 const router = express.Router();
 const protectedRouter = express.Router();
-const asyncMiddleware = require('../asyncMiddleware');
+const { asyncMiddleware, verifyToken } = require('../middleware');
 
 const Cuisine = require('../models/cuisine');
 
@@ -21,6 +21,8 @@ router.route('/').get(
     res.status(200).json(cuisines);
   })
 );
+
+protectedRouter.use(verifyToken);
 
 protectedRouter.route('/').post(
   asyncMiddleware(async (req, res) => {

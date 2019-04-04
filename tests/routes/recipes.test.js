@@ -1,4 +1,5 @@
 const { MongoMemoryServer } = require('mongodb-memory-server');
+const jwt = require('jsonwebtoken');
 
 const request = require('supertest');
 const mongoose = require('mongoose');
@@ -7,12 +8,19 @@ const app = require('../../app');
 const Ingredient = require('../../models/ingredient');
 const Cuisine = require('../../models/cuisine');
 const Recipe = require('../../models/recipe');
-const { seedRecipes, seedData } = require('./seedRecipes');
+const { seedRecipes } = require('./seedRecipes');
 
 const route = (params = '') => {
   const path = '/recipes';
   return `${path}/${params}`;
 };
+
+jest.mock('jsonwebtoken');
+
+jwt.verify.mockImplementation(async (token, secret) => {
+  if (token === 'SUPER SECRET') return Promise.resolve({ email: 'abc@hotmail.com' });
+  throw new Error('invalid token');
+});
 
 describe('Recipes', () => {
   let mongod;
@@ -170,6 +178,7 @@ describe('Recipes', () => {
       const { title, imageUrl, timeRequired, servings, instructions } = recipe;
       const res = await request(app)
         .post(route())
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(recipe)
         .expect('content-type', /json/)
         .expect(201);
@@ -210,6 +219,7 @@ describe('Recipes', () => {
       };
       const res1 = await request(app)
         .post(route())
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(recipe1)
         .expect('content-type', /json/)
         .expect(400);
@@ -221,10 +231,24 @@ describe('Recipes', () => {
       };
       const res2 = await request(app)
         .post(route())
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(recipe2)
         .expect('content-type', /json/)
         .expect(400);
       expect(res2.body.message).toEqual('missing cuisine');
+    });
+    test('respond with 400 when creating recipe with invalid token', async () => {
+      const recipe = {
+        title: 'Chicken Rice',
+        cuisine: 'Chinese',
+      };
+      const res = await request(app)
+        .post(route())
+        .set('authorization', 'Bearer invalid token')
+        .send(recipe)
+        .expect('content-type', /json/)
+        .expect(400);
+      expect(JSON.parse(res.error.text).message).toEqual(expect.stringMatching(/invalid token/i));
     });
   });
   describe('[PUT]', () => {
@@ -258,6 +282,7 @@ describe('Recipes', () => {
       const { title, imageUrl, timeRequired, servings, instructions } = updatedRecipe;
       const res = await request(app)
         .put(route(recipe._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(updatedRecipe)
         .expect('content-type', /json/)
         .expect(202);
@@ -290,6 +315,7 @@ describe('Recipes', () => {
     test('should respond with 404 when updating of objectId that does not exist but of correct format', async () => {
       const res = await request(app)
         .put(route('5c9c87eec7b99571d48cc6c3'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(updatedRecipe)
         .expect('content-type', /json/)
         .expect(404);
@@ -299,6 +325,7 @@ describe('Recipes', () => {
     test('should respond with 400 when updating on invalid objectId', async () => {
       const res = await request(app)
         .put(route('invalidId'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(updatedRecipe)
         .expect('content-type', /json/)
         .expect(400);
@@ -311,6 +338,7 @@ describe('Recipes', () => {
       copyUpdatedRecipe.title = '';
       const res1 = await request(app)
         .put(route(recipe._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(copyUpdatedRecipe)
         .expect('content-type', /json/)
         .expect(400);
@@ -320,6 +348,7 @@ describe('Recipes', () => {
       copyUpdatedRecipe2.cuisine = '';
       const res2 = await request(app)
         .put(route(recipe._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(copyUpdatedRecipe2)
         .expect('content-type', /json/)
         .expect(400);
@@ -331,17 +360,20 @@ describe('Recipes', () => {
       const recipe = await Recipe.findOne({ title: 'Chicken Parmesan' });
       await request(app)
         .delete(route(recipe._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .expect(202);
     });
     test('should respond with 404 on delete of objectId that does not exist but of correct format', async () => {
       const res = await request(app)
         .delete(route('5c9a1dc854951c967995ee35'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .expect(404);
       expect(res.body.message).toEqual(expect.stringMatching(/Recipe not found/i));
     });
     test('should respond with 400 when deleting invalid objectId', async () => {
       const res = await request(app)
         .delete(route('invalidId'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .expect(400);
       expect(res.body.message).toEqual(expect.stringMatching(/Cast to ObjectId failed/i));
     });

@@ -4,7 +4,7 @@ const router = express.Router();
 const protectedRouter = express.Router();
 const boom = require('boom');
 const Ingredient = require('../models/ingredient');
-const asyncMiddleware = require('../asyncMiddleware');
+const { asyncMiddleware, verifyToken } = require('../middleware');
 
 router.route('/').get(
   asyncMiddleware(async (req, res) => {
@@ -19,6 +19,8 @@ router.route('/').get(
     res.status(200).json(ingredients);
   })
 );
+
+protectedRouter.use(verifyToken);
 
 protectedRouter.route('/').post(
   asyncMiddleware(async (req, res) => {

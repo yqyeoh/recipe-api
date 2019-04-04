@@ -2,9 +2,12 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 
 const request = require('supertest');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const app = require('../../app');
 
 const Cuisine = require('../../models/cuisine');
+
+jest.mock('jsonwebtoken');
 
 const route = (params = '') => {
   const path = '/cuisines';
@@ -16,6 +19,11 @@ const mapResponseCuisines = cuisines => {
     name: cuisine.name,
   }));
 };
+
+jwt.verify.mockImplementation(async (token, secret) => {
+  if (token === 'SUPER SECRET') return Promise.resolve({ email: 'abc@hotmail.com' });
+  throw new Error('invalid token');
+});
 
 describe('Cuisines', () => {
   let mongod;
@@ -90,15 +98,27 @@ describe('Cuisines', () => {
       const cuisine = { name: 'Japanese' };
       const res = await request(app)
         .post(route())
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(cuisine)
         .expect('content-type', /json/)
         .expect(201);
       expect(res.body).toEqual(expect.objectContaining({ name: 'Japanese' }));
     });
+    test('should respond with 400 when creating a new cuisine with invalid token', async () => {
+      const cuisine = { name: 'Japanese' };
+      const res = await request(app)
+        .post(route())
+        .set('authorization', 'Bearer invalid token')
+        .send(cuisine)
+        .expect('content-type', /json/)
+        .expect(400);
+      expect(JSON.parse(res.error.text).message).toEqual(expect.stringMatching(/invalid token/i));
+    });
     test('should respond with 400 when creating a new cuisine without name', async () => {
       const cuisine = { name: '' };
       const res = await request(app)
         .post(route())
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(cuisine)
         .expect(400);
       expect(JSON.parse(res.error.text).message).toEqual(expect.stringMatching(/`name` is required/i));
@@ -107,6 +127,7 @@ describe('Cuisines', () => {
       const cuisine = { name: 'Chinese' };
       const res = await request(app)
         .post(route())
+        .set('authorization', 'Bearer SUPER SECRET')
         .send(cuisine)
         .expect(409);
       expect(JSON.parse(res.error.text).message).toEqual(expect.stringMatching(/duplicate key error/i));
@@ -117,6 +138,7 @@ describe('Cuisines', () => {
       const cuisine = await Cuisine.findOne({ name: 'Chinese' });
       const res = await request(app)
         .put(route(cuisine._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send({ name: 'Korean' })
         .expect('content-type', /json/)
         .expect(202);
@@ -125,6 +147,7 @@ describe('Cuisines', () => {
     test('should respond with 404 when updating of objectId that does not exist but of correct format', async () => {
       await request(app)
         .put(route('5c9a1dc854951c967995ee32'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send({ isExcludedFromMatch: true })
         .expect('content-type', /json/)
         .expect(404);
@@ -132,6 +155,7 @@ describe('Cuisines', () => {
     test('should respond with 400 when updating on invalid objectId', async () => {
       await request(app)
         .put(route('invalidId'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send({ isExcludedFromMatch: true })
         .expect('content-type', /json/)
         .expect(400);
@@ -140,6 +164,7 @@ describe('Cuisines', () => {
       const cuisine = await Cuisine.findOne({ name: 'Chinese' });
       const res = await request(app)
         .put(route(cuisine._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .send({ name: '' })
         .expect('content-type', /json/)
         .expect(400);
@@ -151,16 +176,19 @@ describe('Cuisines', () => {
       const cuisine = await Cuisine.findOne({ name: 'Chinese' });
       await request(app)
         .delete(route(cuisine._id))
+        .set('authorization', 'Bearer SUPER SECRET')
         .expect(202);
     });
     test('should respond with 404 on delete of objectId that does not exist but of correct format', async () => {
       await request(app)
         .delete(route('5c9a1dc854951c967995ee35'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .expect(404);
     });
     test('should respond with 400 when deleting invalid objectId', async () => {
       await request(app)
         .delete(route('invalidId'))
+        .set('authorization', 'Bearer SUPER SECRET')
         .expect(400);
     });
   });
