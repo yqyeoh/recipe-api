@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const boom = require('boom');
 const User = require('../models/user');
-const { asyncMiddleware } = require('../middleware');
+const { asyncMiddleware, verifyToken } = require('../middleware');
 
 router.route('/').get((req, res) => {
   res.send('hello');
@@ -31,5 +31,9 @@ router.route('/authenticate').post(
     res.cookie('token', token, { httpOnly: true }).sendStatus(200);
   })
 );
+
+router.get('/checkLogin', verifyToken, (req, res) => {
+  res.status(200).json(req.email);
+});
 
 module.exports = router;
