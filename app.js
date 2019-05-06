@@ -9,10 +9,10 @@ const ingredients = require('./routes/ingredients');
 const cuisines = require('./routes/cuisines');
 
 const whitelist = [
-  'https://admiring-kalam-aa2409.netlify.com/',
-  'https://auto-recipe-api-yq.herokuapp.com/',
-  'https://test-recipe-api-yq.herokuapp.com/',
-  'https://recipe-api-yq.herokuapp.com/',
+  'https://admiring-kalam-aa2409.netlify.com',
+  'https://auto-recipe-api-yq.herokuapp.com',
+  'https://test-recipe-api-yq.herokuapp.com',
+  'https://recipe-api-yq.herokuapp.com',
 ];
 
 if (process.env.NODE_ENV !== 'production') {
