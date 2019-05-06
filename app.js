@@ -8,7 +8,29 @@ const recipes = require('./routes/recipes');
 const ingredients = require('./routes/ingredients');
 const cuisines = require('./routes/cuisines');
 
-app.use(cors());
+const whitelist = [
+  'https://admiring-kalam-aa2409.netlify.com/',
+  // 'https://auto-recipe-api-yq.herokuapp.com/',
+  // 'https://test-recipe-api-yq.herokuapp.com/',
+  // 'https://recipe-api-yq.herokuapp.com/',
+];
+
+if (process.env.NODE_ENV !== 'production') {
+  whitelist.push('http://localhost:3000');
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,8 +44,6 @@ app.use('/ingredients', ingredients.protectedRouter);
 app.use('/cuisines', cuisines.router);
 app.use('/cuisines', cuisines.protectedRouter);
 app.use((err, req, res, next) => {
-  // console.log(err.message);
-  //   console.log(err.output.payload);
   return res.status(err.output.statusCode).json(err.output.payload);
 });
 

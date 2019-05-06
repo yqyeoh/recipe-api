@@ -7,7 +7,7 @@ const User = require('../models/user');
 const { asyncMiddleware, verifyToken } = require('../middleware');
 
 router.route('/').get((req, res) => {
-  res.send('hello');
+  res.cookie.send('hello');
 });
 
 router.route('/register').post(
@@ -25,9 +25,12 @@ router.route('/authenticate').post(
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) throw boom.badRequest('incorrect email or password');
+
     const match = await user.isCorrectPassword(password);
+
     if (!match) throw boom.badRequest('incorrect email or password');
     const token = jwt.sign({ email }, process.env.SECRET_KEY, { expiresIn: '24hr' });
+
     res.cookie('token', token, { httpOnly: true }).sendStatus(200);
   })
 );
@@ -35,5 +38,12 @@ router.route('/authenticate').post(
 router.get('/checkLogin', verifyToken, (req, res) => {
   res.status(200).json(req.email);
 });
+
+router.get(
+  '/logout',
+  asyncMiddleware((req, res) => {
+    res.clearCookie('token').sendStatus(200);
+  })
+);
 
 module.exports = router;

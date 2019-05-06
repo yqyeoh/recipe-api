@@ -12,6 +12,7 @@ const asyncMiddleware = fn => (req, res, next) => {
       }
       return next(boom.badImplementation(err));
     }
+    // console.log(err);
     next(err);
   });
 };
@@ -23,7 +24,6 @@ const verifyToken = asyncMiddleware(async (req, res, next) => {
     req.headers['x-access-token'] ||
     req.headers.authorization ||
     req.cookies.token;
-
   if (!token) throw boom.unauthorized('No token provided');
   if (token.startsWith('Bearer ')) {
     token = token.slice(7, token.length);
